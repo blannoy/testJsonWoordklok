@@ -37,7 +37,7 @@
     delay(2000);                   \
   } while (0)
 
-
+#ifdef DEBUGMEM
 #define reportmem(...)                                                     \
   do                                                                       \
   {                                                                        \
@@ -60,6 +60,9 @@
         Serial.println();                                                  \
     }                                                                      \
   } while (0)
+#else
+#define reportmem(...)
+#endif
 
 char *stack_start;
 uint32_t beginFreeStack;
