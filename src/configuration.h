@@ -238,8 +238,12 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
     {
      // JsonArray jsonLeds = layout[iWord][F("leds")].to<JsonArray>();
 
-conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>().length()+1);
-      //copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
+      conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>().length()+1);
+      if (!conf.clockface[iWord].label)
+      {
+        Serial.println("ERROR malloc conf.clockface label");
+      }
+      copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
      // copyArray(conf.clockface[iWord].leds,jsonLeds);
      // copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
     //  conf.clockface[iWord].isActive = methodStringToMethod(layout[iWord][F("function")].as<String>());
