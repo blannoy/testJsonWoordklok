@@ -125,8 +125,8 @@ byte calcBrightness()
 void setColor(int ledNr, NeoBufferMethod<NeoGrbFeature>::ColorObject color)
 {
   // check if color changed
-  RgbColor currentColor = getColor(klokImage, ledNr);
-  RgbColor targetColor = color;
+  // RgbColor currentColor = getColor(klokImage, ledNr);
+  // RgbColor targetColor = color;
   klokImage.SetPixelColor(ledNr, 0, color);
 }
 
