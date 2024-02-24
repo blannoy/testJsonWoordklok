@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <FS.h>
 #include <LittleFS.h>
-#include <coredecls.h> // crc32()
+// #include <coredecls.h> // crc32()
 
 #define filesystem (LittleFS)
 
