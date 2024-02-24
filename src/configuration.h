@@ -395,8 +395,7 @@ void loadConfiguration(Configuration *conf)
 void configurationSetup()
 {
   reportmem("test");
-  config = (Configuration *)malloc(1258);
-  //config = (Configuration *)malloc(1300);
+  config = (Configuration *)malloc(sizeof(Configuration));
     reportmem("test");
   loadConfiguration(config);
 }
