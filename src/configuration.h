@@ -281,6 +281,10 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
 
     JsonObjectConst wordColor = jsonColors[F("ledConfig")][F("wordColor")];
     conf.wordColor.color = (colorDef *)malloc(totalWords * sizeof(colorDef));
+    if (!conf.wordColor.color )
+    {
+      Serial.println("ERROR malloc conf.wordcolor.color");
+    }
     for (int i = 0; i < totalWords; i++)
     {
       copyColor(conf.wordColor.color[i], wordColor[F("color")][i]);
