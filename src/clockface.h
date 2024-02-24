@@ -216,7 +216,7 @@ bool isTwelveActiveMethod(int hour, int minute)
 
 isActiveMethod methodStringToMethod(String method)
 {
-  for (uint8 iMethod = 0; iMethod < sizeof(isActiveMethodStrings) / sizeof(isActiveMethodStrings[0]); iMethod++)
+  for (uint8_t iMethod = 0; iMethod < sizeof(isActiveMethodStrings) / sizeof(isActiveMethodStrings[0]); iMethod++)
   {
     if (method == isActiveMethodStrings[iMethod])
     {
