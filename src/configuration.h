@@ -228,8 +228,13 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
     //  memory needed for clockface:
     //  totalleds*sizeof(int)+(numwords+1)*sizeof(int) + (numleds * sizeof(char) + (numwords+1)*nullterminator) + 20*sizeof(char)
      //ClockfaceWord* cw=(ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-        conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-     for (int iWord = 0; iWord < totalWords + 1; iWord++)
+    // conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
+    conf.clockface = (ClockfaceWord *)malloc(sizeof(ClockfaceWord));
+    if (!conf.clockface)
+    {
+      Serial.println("ERROR malloc conf.clockface");
+    }
+    for (int iWord = 0; iWord < totalWords + 1; iWord++)
     {
      // JsonArray jsonLeds = layout[iWord][F("leds")].to<JsonArray>();
 
