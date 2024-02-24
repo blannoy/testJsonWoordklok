@@ -162,8 +162,15 @@ copyColorToJson(conf.wordColor.backgroundColor,colors_ledConfig_wordColor,"backg
 
 void copyString(char *configVal, JsonVariantConst variant)
 {
-  const char *value = variant.as<const char *>();
-  strlcpy(configVal, value, strlen(value) + 1);
+  if (variant.isNull())
+  {
+    configVal[0]=0;
+  }
+  else
+  {
+    const char *value = variant.as<const char *>();
+    strlcpy(configVal, value, strlen(value) + 1);
+  }
 }
 
 void copyInt(uint8_t &configVal, JsonVariantConst variant)
