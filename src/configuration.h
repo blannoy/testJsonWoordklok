@@ -223,7 +223,7 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
 
     //     /// Load clockface
 
-          uint16_t clockSize=totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char);
+    //      uint16_t clockSize=totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char);
     //        debug_printf("Malloc needed: %d\n", clockSize); */
     //  memory needed for clockface:
     //  totalleds*sizeof(int)+(numwords+1)*sizeof(int) + (numleds * sizeof(char) + (numwords+1)*nullterminator) + 20*sizeof(char)
