@@ -229,7 +229,7 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
     //  totalleds*sizeof(int)+(numwords+1)*sizeof(int) + (numleds * sizeof(char) + (numwords+1)*nullterminator) + 20*sizeof(char)
      //ClockfaceWord* cw=(ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
     // conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-    conf.clockface = (ClockfaceWord *)malloc(sizeof(ClockfaceWord));
+    conf.clockface = (ClockfaceWord *)malloc((totalWords + 1)*sizeof(ClockfaceWord));
     if (!conf.clockface)
     {
       Serial.println("ERROR malloc conf.clockface");
