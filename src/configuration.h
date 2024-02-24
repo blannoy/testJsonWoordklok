@@ -396,6 +396,11 @@ void configurationSetup()
 {
   reportmem("test");
   config = (Configuration *)malloc(sizeof(Configuration));
+  if (!config)
+  {
+    Serial.println("ERROR malloc configurationSetup");
+  }
+
     reportmem("test");
   loadConfiguration(config);
 }
