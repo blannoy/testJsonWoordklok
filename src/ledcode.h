@@ -2,8 +2,11 @@
 
 #include <headers.h>
 #define colorSaturation 64
-
+#ifdef ESP32
+NeoPixelBus<NeoGrbFeature, DotStarEsp32DmaSpiMethod> strip(NUM_LEDS);
+#else
 NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(NUM_LEDS);
+#endif
 NeoBuffer<NeoBufferMethod<NeoGrbFeature>> klokImage(NUM_LEDS, 1, NULL);
 NeoBuffer<NeoBufferMethod<NeoGrbFeature>> targetKlokImage(NUM_LEDS, 1, NULL);
 NeoPixelAnimator animations(NUM_LEDS, NEO_CENTISECONDS);
