@@ -26,7 +26,7 @@ uint8_t wordGridHorizontal;
 uint8_t wordGridVertical;
 uint8_t extraLEDs;
 uint16_t totalLeds = 0;
-uint8 totalWords = 0;
+uint8_t totalWords = 0;
 
 typedef enum
 {
