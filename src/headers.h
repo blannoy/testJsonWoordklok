@@ -63,7 +63,7 @@ struct ClockfaceWord
 {
   uint8_t *leds;
   int colorCodeInTable;
-  char* label;
+  const char* label;
   isActiveMethod isActive;
 };
 
