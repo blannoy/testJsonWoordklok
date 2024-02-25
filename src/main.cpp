@@ -1,5 +1,5 @@
 #define DEBUG true
-// #define DEBUGMEM true
+#define DEBUGMEM true
 
 #include <Arduino.h>
 #include <utils.h>
