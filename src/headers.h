@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <FS.h>
 #include <LittleFS.h>
-#include <coredecls.h> // crc32()
+// #include <coredecls.h> // crc32()
 
 #define filesystem (LittleFS)
 
@@ -26,7 +26,7 @@ uint8_t wordGridHorizontal;
 uint8_t wordGridVertical;
 uint8_t extraLEDs;
 uint16_t totalLeds = 0;
-uint8 totalWords = 0;
+uint8_t totalWords = 0;
 
 typedef enum
 {
@@ -57,13 +57,13 @@ typedef enum
   isElevenActive,
   isTwelveActive
 } isActiveMethod;
-static char *isActiveMethodStrings[] = {"alwaysOn", "isJust", "fiveMinute", "tenMinute", "quarter", "twenty", "past", "before", "wholeHour", "halfHour", "firstMinute", "secondMinute", "thirdMinute", "fourthMinute", "isOneActive", "isTwoActive", "isThreeActive", "isFourActive", "isFiveActive", "isSixActive", "isSevenActive", "isEightActive", "isNineActive", "isTenActive", "isElevenActive", "isTwelveActive"};
+const char *isActiveMethodStrings[] = {"alwaysOn", "isJust", "fiveMinute", "tenMinute", "quarter", "twenty", "past", "before", "wholeHour", "halfHour", "firstMinute", "secondMinute", "thirdMinute", "fourthMinute", "isOneActive", "isTwoActive", "isThreeActive", "isFourActive", "isFiveActive", "isSixActive", "isSevenActive", "isEightActive", "isNineActive", "isTenActive", "isElevenActive", "isTwelveActive"};
 
 struct ClockfaceWord
 {
   uint8_t *leds;
   int colorCodeInTable;
-  char* label;
+  const char* label;
   isActiveMethod isActive;
 };
 

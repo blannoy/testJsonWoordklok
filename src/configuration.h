@@ -162,8 +162,42 @@ copyColorToJson(conf.wordColor.backgroundColor,colors_ledConfig_wordColor,"backg
 
 void copyString(char *configVal, JsonVariantConst variant)
 {
-  const char *value = variant.as<const char *>();
-  strlcpy(configVal, value, strlen(value) + 1);
+  if (variant.isNull())
+  {
+    configVal[0]=0;
+  }
+  else
+  {
+    const char *value = variant.as<const char *>();
+    strlcpy(configVal, value, strlen(value) + 1);
+  }
+}
+
+const char *createString(JsonVariantConst variant)
+{
+  char *temp;
+
+  if (variant.isNull())
+  {
+    temp=(char *)malloc(sizeof(char));
+    if (!temp)
+    {
+      Serial.println("ERROR malloc createString");
+    }
+    temp[0]=0;
+    return (const char *)temp;
+  }
+  else
+  {
+    const char *value = variant.as<const char *>();
+    temp = (char *)malloc((strlen(value)+1)*sizeof(char));
+    if (!temp)
+    {
+      Serial.println("ERROR malloc createString");
+    }
+    strcpy(temp, value);
+    return (const char *)temp;
+  }
 }
 
 void copyInt(uint8_t &configVal, JsonVariantConst variant)
@@ -223,18 +257,24 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
 
     //     /// Load clockface
 
-          uint16_t clockSize=totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char);
+    //      uint16_t clockSize=totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char);
     //        debug_printf("Malloc needed: %d\n", clockSize); */
     //  memory needed for clockface:
     //  totalleds*sizeof(int)+(numwords+1)*sizeof(int) + (numleds * sizeof(char) + (numwords+1)*nullterminator) + 20*sizeof(char)
      //ClockfaceWord* cw=(ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-        conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-     for (int iWord = 0; iWord < totalWords + 1; iWord++)
+    // conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
+    conf.clockface = (ClockfaceWord *)malloc((totalWords + 1)*sizeof(ClockfaceWord));
+    if (!conf.clockface)
+    {
+      Serial.println("ERROR malloc conf.clockface");
+    }
+    for (int iWord = 0; iWord < totalWords + 1; iWord++)
     {
      // JsonArray jsonLeds = layout[iWord][F("leds")].to<JsonArray>();
 
-conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>().length()+1);
-      //copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
+      // conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>().length()+1);
+      // copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
+      conf.clockface[iWord].label=createString(layout[iWord][F("word")]);
      // copyArray(conf.clockface[iWord].leds,jsonLeds);
      // copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
     //  conf.clockface[iWord].isActive = methodStringToMethod(layout[iWord][F("function")].as<String>());
@@ -272,6 +312,10 @@ conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>
 
     JsonObjectConst wordColor = jsonColors[F("ledConfig")][F("wordColor")];
     conf.wordColor.color = (colorDef *)malloc(totalWords * sizeof(colorDef));
+    if (!conf.wordColor.color )
+    {
+      Serial.println("ERROR malloc conf.wordcolor.color");
+    }
     for (int i = 0; i < totalWords; i++)
     {
       copyColor(conf.wordColor.color[i], wordColor[F("color")][i]);
@@ -395,8 +439,12 @@ void loadConfiguration(Configuration *conf)
 void configurationSetup()
 {
   reportmem("test");
-  config = (Configuration *)malloc(1258);
-  //config = (Configuration *)malloc(1300);
+  config = (Configuration *)malloc(sizeof(Configuration));
+  if (!config)
+  {
+    Serial.println("ERROR malloc configurationSetup");
+  }
+
     reportmem("test");
   loadConfiguration(config);
 }

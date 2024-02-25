@@ -37,7 +37,9 @@
     delay(2000);                   \
   } while (0)
 
-
+#ifdef ESP32
+#define reportmem(...)
+#else
 #define reportmem(...)                                                     \
   do                                                                       \
   {                                                                        \
@@ -60,16 +62,19 @@
         Serial.println();                                                  \
     }                                                                      \
   } while (0)
+#endif
 
 char *stack_start;
 uint32_t beginFreeStack;
 
 void initMemLog()
 {
+#ifndef ESP32
 #ifdef DEBUGMEM
   char stack;
   stack_start = &stack;
   beginFreeStack = ESP.getFreeContStack();
+#endif
 #endif
 }
 
@@ -90,7 +95,7 @@ void hexToColorDef(const char *hex,colorDef* rgb)
   rgb->b = (uint8_t) (number & 0xFF);
   }
 
-void copyColorToJson(colorDef& color,JsonObject& jsonColor,char* key){
+void copyColorToJson(colorDef& color,JsonObject& jsonColor, const char* key){
    char hexColor[8];
    sprintf(hexColor,"#%02X%02X%02X",color.r,color.g,color.b);
    jsonColor[key]=hexColor;
