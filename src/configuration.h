@@ -173,6 +173,33 @@ void copyString(char *configVal, JsonVariantConst variant)
   }
 }
 
+const char *createString(JsonVariantConst variant)
+{
+  char *temp;
+
+  if (variant.isNull())
+  {
+    temp=(char *)malloc(sizeof(char));
+    if (!temp)
+    {
+      Serial.println("ERROR malloc createString");
+    }
+    temp[0]=0;
+    return (const char *)temp;
+  }
+  else
+  {
+    const char *value = variant.as<const char *>();
+    temp = (char *)malloc((strlen(value)+1)*sizeof(char));
+    if (!temp)
+    {
+      Serial.println("ERROR malloc createString");
+    }
+    strcpy(temp, value);
+    return (const char *)temp;
+  }
+}
+
 void copyInt(uint8_t &configVal, JsonVariantConst variant)
 {
   const int value = variant.as<const int>();
@@ -245,12 +272,9 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
     {
      // JsonArray jsonLeds = layout[iWord][F("leds")].to<JsonArray>();
 
-      conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>().length()+1);
-      if (!conf.clockface[iWord].label)
-      {
-        Serial.println("ERROR malloc conf.clockface label");
-      }
-      copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
+      // conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>().length()+1);
+      // copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
+      conf.clockface[iWord].label=createString(layout[iWord][F("word")]);
      // copyArray(conf.clockface[iWord].leds,jsonLeds);
      // copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
     //  conf.clockface[iWord].isActive = methodStringToMethod(layout[iWord][F("function")].as<String>());
