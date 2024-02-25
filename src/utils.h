@@ -69,10 +69,12 @@ uint32_t beginFreeStack;
 
 void initMemLog()
 {
+#ifndef ESP32
 #ifdef DEBUGMEM
   char stack;
   stack_start = &stack;
   beginFreeStack = ESP.getFreeContStack();
+#endif
 #endif
 }
 
