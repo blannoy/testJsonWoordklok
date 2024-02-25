@@ -37,7 +37,9 @@
     delay(2000);                   \
   } while (0)
 
-#ifdef DEBUGMEM
+#ifdef ESP32
+#define reportmem(...)
+#else
 #define reportmem(...)                                                     \
   do                                                                       \
   {                                                                        \
@@ -60,8 +62,6 @@
         Serial.println();                                                  \
     }                                                                      \
   } while (0)
-#else
-#define reportmem(...)
 #endif
 
 char *stack_start;
