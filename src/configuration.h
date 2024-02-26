@@ -28,10 +28,61 @@ void verifyConfigFile()
   }
 }
 
+void copyString(JsonVariantConst variant, char *configVal)
+{
+  if (variant.isNull())
+  {
+    configVal[0] = 0;
+  }
+  else
+  {
+    const char *value = variant.as<const char *>();
+    strlcpy(configVal, value, strlen(value) + 1);
+  }
+}
+
+const char *createString(JsonVariantConst variant)
+{
+  char *temp;
+
+  if (variant.isNull())
+  {
+    temp = (char *)malloc(sizeof(char));
+    if (!temp)
+    {
+      Serial.println("ERROR malloc createString");
+    }
+    temp[0] = 0;
+    return (const char *)temp;
+  }
+  else
+  {
+    const char *value = variant.as<const char *>();
+    temp = (char *)malloc((strlen(value) + 1) * sizeof(char));
+    if (!temp)
+    {
+      Serial.println("ERROR malloc createString");
+    }
+    strcpy(temp, value);
+    return (const char *)temp;
+  }
+}
+
+// void copyInt(JsonVariantConst variant,uint8_t &configVal)
+// {
+//   const int value = variant.as<const int>();
+//   memmove(&configVal, &value, sizeof(uint8_t));
+// }
+
+void copyColor(JsonVariantConst variant, colorDef &configVal)
+{
+  const char *value = variant.as<const char *>();
+  hexToColorDef(value, &configVal);
+}
 
 DynamicJsonDocument config2JSON(Configuration &conf)
 {
- // DynamicJsonDocument doc(CONFIGSIZE);
+  // DynamicJsonDocument doc(CONFIGSIZE);
   json.clear();
   JsonObject system = json[F("system")].to<JsonObject>();
   system[F("ntp_server")] = conf.ntp_server;
@@ -42,26 +93,26 @@ DynamicJsonDocument config2JSON(Configuration &conf)
   jsonClockface[F("wordGridVertical")] = NUM_ROWS;
   jsonClockface[F("extraLEDs")] = OFFSET;
 
-  // JsonArray layout = jsonClockface[F("layout")].to<JsonArray>();
+  JsonArray layout = jsonClockface[F("layout")].to<JsonArray>();
 
-  // for (uint8_t i = 0; i < NUMWORDS; i++)
-  // {
-  //   JsonObject wordConfig = layout.add<JsonObject>();
-  //   wordConfig[F("word")] = config.clockface[i].label;
-  //   JsonArray ledLayout = wordConfig[F("leds")].to<JsonArray>();
-  //   for (uint8_t j = 0; j < sizeof(config.clockface[i].leds)/sizeof(int); j++)
-  //   {
-  //     ledLayout.add(config.clockface[i].leds[j]);
-  //   }
-  // }
+  for (uint8_t i = 0; i < NUMWORDS; i++)
+  {
+    JsonObject wordConfig = layout.createNestedObject();
+    wordConfig[F("word")] = conf.clockface[i].label;
+    JsonArray ledLayout = wordConfig[F("leds")].to<JsonArray>();
+    for (uint8_t j = 0; j < wordConfig[F("word")].as<String>().length(); j++)
+    {
+      ledLayout.add(conf.clockface[i].leds[j]);
+    }
+  }
 
-  // JsonObject background = layout.add<JsonObject>();
-  // background[F("background")] = config.clockface[NUMWORDS].label;
-  // JsonArray ledLayout = background[F("leds")].to<JsonArray>();
-  // for (uint8_t j = 0; j < sizeof(config.clockface[j].leds)/sizeof(int); j++)
-  // {
-  //   ledLayout.add(config.clockface[NUMWORDS].leds[j]);
-  // }
+  JsonObject background = layout.createNestedObject();
+  background[F("background")]=conf.clockface[NUMWORDS].label;
+  JsonArray ledLayout = background[F("leds")].to<JsonArray>();
+  for (uint8_t j = 0; j < background[F("background")].as<String>().length(); j++)
+  {
+    ledLayout.add(conf.clockface[NUMWORDS].leds[j]);
+  } 
   JsonObject colors = json[F("colors")].to<JsonObject>();
 
   switch (conf.ledMode)
@@ -82,32 +133,31 @@ DynamicJsonDocument config2JSON(Configuration &conf)
     break;
   }
 
-
   JsonObject colors_ledConfig = colors[F("ledConfig")].to<JsonObject>();
 
   JsonObject colors_ledConfig_singleColor = colors_ledConfig[F("singleColor")].to<JsonObject>();
-  copyColorToJson(conf.singleColor.color,colors_ledConfig_singleColor,"color");
-  copyColorToJson(conf.singleColor.backgroundColor,colors_ledConfig_singleColor,"backgroundColor");
+  copyColorToJson(conf.singleColor.color, colors_ledConfig_singleColor, "color");
+  copyColorToJson(conf.singleColor.backgroundColor, colors_ledConfig_singleColor, "backgroundColor");
 
   JsonObject colors_ledConfig_rainbowColor = colors_ledConfig[F("rainbowColor")].to<JsonObject>();
   colors_ledConfig_rainbowColor[F("cycleTime")] = conf.rainbowColor.cycleTime;
-  copyColorToJson(conf.rainbowColor.backgroundColor,colors_ledConfig_rainbowColor,"backgroundColor");
+  copyColorToJson(conf.rainbowColor.backgroundColor, colors_ledConfig_rainbowColor, "backgroundColor");
 
   JsonObject colors_ledConfig_hourlyColor = colors_ledConfig[F("hourlyColor")].to<JsonObject>();
   JsonArray colors_ledConfig_hourlyColor_color = colors_ledConfig_hourlyColor[F("color")].to<JsonArray>();
   for (int i = 0; i < 24; i++)
   {
-    copyColorToJson(conf.hourlyColor.color[i],colors_ledConfig_hourlyColor_color);
+    copyColorToJson(conf.hourlyColor.color[i], colors_ledConfig_hourlyColor_color);
   }
-  copyColorToJson(conf.hourlyColor.backgroundColor,colors_ledConfig_hourlyColor,"backgroundColor");
+  copyColorToJson(conf.hourlyColor.backgroundColor, colors_ledConfig_hourlyColor, "backgroundColor");
 
   JsonObject colors_ledConfig_wordColor = colors_ledConfig[F("wordColor")].to<JsonObject>();
   JsonArray colors_ledConfig_wordColor_color = colors_ledConfig_wordColor[F("color")].to<JsonArray>();
   for (int i = 0; i < NUMWORDS; i++)
   {
-        copyColorToJson(conf.wordColor.color[i],colors_ledConfig_wordColor_color);
+    copyColorToJson(conf.wordColor.color[i], colors_ledConfig_wordColor_color);
   }
-copyColorToJson(conf.wordColor.backgroundColor,colors_ledConfig_wordColor,"backgroundColor");
+  copyColorToJson(conf.wordColor.backgroundColor, colors_ledConfig_wordColor, "backgroundColor");
   JsonObject brightness = json[F("brightness")].to<JsonObject>();
   ;
   switch (conf.brightnessMode)
@@ -155,61 +205,9 @@ copyColorToJson(conf.wordColor.backgroundColor,colors_ledConfig_wordColor,"backg
     json[F("wifi")][F("static_dns2")] = conf.wifiConfig.static_dns2;
   }
 
- // json[F("checksum")] = conf.checksum; 
+  // json[F("checksum")] = conf.checksum;
 
   return json;
-}
-
-void copyString(char *configVal, JsonVariantConst variant)
-{
-  if (variant.isNull())
-  {
-    configVal[0]=0;
-  }
-  else
-  {
-    const char *value = variant.as<const char *>();
-    strlcpy(configVal, value, strlen(value) + 1);
-  }
-}
-
-const char *createString(JsonVariantConst variant)
-{
-  char *temp;
-
-  if (variant.isNull())
-  {
-    temp=(char *)malloc(sizeof(char));
-    if (!temp)
-    {
-      Serial.println("ERROR malloc createString");
-    }
-    temp[0]=0;
-    return (const char *)temp;
-  }
-  else
-  {
-    const char *value = variant.as<const char *>();
-    temp = (char *)malloc((strlen(value)+1)*sizeof(char));
-    if (!temp)
-    {
-      Serial.println("ERROR malloc createString");
-    }
-    strcpy(temp, value);
-    return (const char *)temp;
-  }
-}
-
-void copyInt(uint8_t &configVal, JsonVariantConst variant)
-{
-  const int value = variant.as<const int>();
-  memmove(&configVal, &value, sizeof(uint8_t));
-}
-
-void copyColor(colorDef &configVal, JsonVariantConst variant)
-{
-  const char *value = variant.as<const char *>();
-  hexToColorDef(value, &configVal);
 }
 
 bool JSON2config(const JsonDocument &doc, Configuration &conf)
@@ -224,61 +222,77 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
   {
     if (!doc.containsKey(configKeys[i]))
     {
-     // debug_print(F("Missing key "));
-     // debug_println(configKeys[i]);
+      // debug_print(F("Missing key "));
+      // debug_println(configKeys[i]);
       validJSON = false;
     }
   }
   if (validJSON)
   {
 
-     wordGridHorizontal = json[F("clockface")][F("wordGridHorizontal")].as<unsigned int>();
-     wordGridVertical = json[F("clockface")][F("wordGridVertical")].as<unsigned int>();
-     extraLEDs = json[F("clockface")][F("extraLEDs")].as<unsigned int>();
-     totalLeds = wordGridHorizontal * wordGridVertical + extraLEDs;
-     JsonArray layout = json[F("clockface")][F("layout")];
-     totalWords = layout.size() - 1;
+    wordGridHorizontal = json[F("clockface")][F("wordGridHorizontal")].as<unsigned int>();
+    wordGridVertical = json[F("clockface")][F("wordGridVertical")].as<unsigned int>();
+    extraLEDs = json[F("clockface")][F("extraLEDs")].as<unsigned int>();
+    totalLeds = wordGridHorizontal * wordGridVertical + extraLEDs;
+    JsonArray layout = json[F("clockface")][F("layout")];
+    totalWords = layout.size() - 1;
 
     // debug_printf("Total words: %d\n", totalWords);
     // debug_printf("Total leds: %d\n", totalLeds);
-     reportmem("Conversion started");
+    reportmem("Conversion started");
 
     if (json[F("system")][F("ntp_server")])
     {
-      copyString(conf.ntp_server, json[F("system")][F("ntp_server")]);
+      copyString(json[F("system")][F("ntp_server")], conf.ntp_server);
     }
-  reportmem("ntp");
+    reportmem("ntp");
 
     if (json[F("system")][F("hostname")])
     {
-      copyString(conf.hostname, json[F("system")][F("hostname")]);
+      copyString(json[F("system")][F("hostname")], conf.hostname);
     }
-      reportmem("hostname");
+    reportmem("hostname");
 
-    //     /// Load clockface
-
-    //      uint16_t clockSize=totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char);
-    //        debug_printf("Malloc needed: %d\n", clockSize); */
+    /// Load clockface
     //  memory needed for clockface:
     //  totalleds*sizeof(int)+(numwords+1)*sizeof(int) + (numleds * sizeof(char) + (numwords+1)*nullterminator) + 20*sizeof(char)
-     //ClockfaceWord* cw=(ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-    // conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-    conf.clockface = (ClockfaceWord *)malloc((totalWords + 1)*sizeof(ClockfaceWord));
+    conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
+    // conf.clockface = (ClockfaceWord *)malloc((totalWords + 1)*sizeof(ClockfaceWord));
     if (!conf.clockface)
     {
       Serial.println("ERROR malloc conf.clockface");
     }
+    uint8_t backgroundKey = -1;
     for (int iWord = 0; iWord < totalWords + 1; iWord++)
     {
-     // JsonArray jsonLeds = layout[iWord][F("leds")].to<JsonArray>();
-
-      // conf.clockface[iWord].label=(char*) malloc((layout[iWord][F("word")]).as<String>().length()+1);
-      // copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
-      conf.clockface[iWord].label=createString(layout[iWord][F("word")]);
-     // copyArray(conf.clockface[iWord].leds,jsonLeds);
-     // copyString( conf.clockface[iWord].label,layout[iWord][F("word")]);
-    //  conf.clockface[iWord].isActive = methodStringToMethod(layout[iWord][F("function")].as<String>());
-     // conf.clockface[iWord].colorCodeInTable = iWord;
+      JsonArrayConst jsonLeds = layout[iWord]["leds"].as<JsonArray>();
+      if (layout[iWord].containsKey(F("word")))
+      {
+        conf.clockface[iWord].label = createString(layout[iWord][F("word")]);
+        conf.clockface[iWord].leds = (uint8_t *)malloc(jsonLeds.size() * sizeof(int));
+        for (uint8_t i = 0; i < jsonLeds.size(); i++)
+        {
+          conf.clockface[iWord].leds[i] = jsonLeds[i].as<int>();
+        }
+        conf.clockface[iWord].isActive = methodStringToMethod(layout[iWord][F("function")].as<String>());
+        conf.clockface[iWord].colorCodeInTable = iWord;
+      }
+      else if (layout[iWord].containsKey(F("background")))
+      {
+        backgroundKey = iWord;
+      }
+    }
+    if (backgroundKey > 0)
+    {
+      JsonArrayConst jsonLeds = layout[backgroundKey]["leds"].as<JsonArray>();
+      conf.clockface[backgroundKey].label = createString(layout[backgroundKey][F("background")]);
+      conf.clockface[backgroundKey].leds = (uint8_t *)malloc(jsonLeds.size() * sizeof(int));
+      for (uint8_t i = 0; i < jsonLeds.size(); i++)
+      {
+        conf.clockface[backgroundKey].leds[i] = jsonLeds[i].as<int>();
+      }
+      conf.clockface[backgroundKey].isActive = methodStringToMethod(layout[backgroundKey][F("function")].as<String>());
+      conf.clockface[backgroundKey].colorCodeInTable = backgroundKey;
     }
 
     ///
@@ -301,80 +315,78 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
     {
       conf.ledMode = LedMode::rainbowColor;
     }
-    copyColor(conf.singleColor.color, jsonColors[F("ledConfig")][F("singleColor")][F("color")]);
-    copyColor(conf.singleColor.backgroundColor, jsonColors[F("ledConfig")][F("singleColor")][F("backgroundColor")]);
+    copyColor(jsonColors[F("ledConfig")][F("singleColor")][F("color")], conf.singleColor.color);
+    copyColor(jsonColors[F("ledConfig")][F("singleColor")][F("backgroundColor")], conf.singleColor.backgroundColor);
     JsonObjectConst hourlyColor = jsonColors[F("ledConfig")][F("hourlyColor")];
     for (int i = 0; i < 24; i++)
     {
-      copyColor(conf.hourlyColor.color[i], hourlyColor[F("color")][i]);
+      copyColor(hourlyColor[F("color")][i], conf.hourlyColor.color[i]);
     }
-    copyColor(conf.hourlyColor.backgroundColor, hourlyColor[F("backgroundColor")]);
+    copyColor(hourlyColor[F("backgroundColor")], conf.hourlyColor.backgroundColor);
 
     JsonObjectConst wordColor = jsonColors[F("ledConfig")][F("wordColor")];
     conf.wordColor.color = (colorDef *)malloc(totalWords * sizeof(colorDef));
-    if (!conf.wordColor.color )
+    if (!conf.wordColor.color)
     {
       Serial.println("ERROR malloc conf.wordcolor.color");
     }
     for (int i = 0; i < totalWords; i++)
     {
-      copyColor(conf.wordColor.color[i], wordColor[F("color")][i]);
+      copyColor(wordColor[F("color")][i], conf.wordColor.color[i]);
     }
-    copyColor(conf.wordColor.backgroundColor, wordColor[F("backgroundColor")]);
+    copyColor(wordColor[F("backgroundColor")], conf.wordColor.backgroundColor);
 
     conf.rainbowColor.cycleTime = jsonColors[F("ledConfig")][F("rainbowColor")][F("cycleTime")].as<unsigned long>();
-    copyColor(conf.rainbowColor.backgroundColor, jsonColors[F("ledConfig")][F("rainbowColor")][F("backgroundColor")]);
+    copyColor(jsonColors[F("ledConfig")][F("rainbowColor")][F("backgroundColor")], conf.rainbowColor.backgroundColor);
 
-
-    JsonVariantConst jsonBrightnessMode=json[F("brightness")][F("brightnessMode")];
-    const char* brightnessMode = jsonBrightnessMode.as<const char*>();
-    if (strcmp(brightnessMode,"fixedBrightness"))
+    JsonVariantConst jsonBrightnessMode = json[F("brightness")][F("brightnessMode")];
+    const char *brightnessMode = jsonBrightnessMode.as<const char *>();
+    if (strcmp(brightnessMode, "fixedBrightness"))
     {
       conf.brightnessMode = BrightnessMode::fixedBrightness;
     }
-    else if (strcmp(brightnessMode,"ldrBrightness"))
+    else if (strcmp(brightnessMode, "ldrBrightness"))
     {
       conf.brightnessMode = BrightnessMode::ldrBrightness;
     }
-    else if (strcmp(brightnessMode,"timeBrightness"))
+    else if (strcmp(brightnessMode, "timeBrightness"))
     {
       conf.brightnessMode = BrightnessMode::timeBrightness;
     }
 
     JsonObjectConst jsonBrightnessSettings = json[F("brightness")][F("settings")];
-    copyInt(conf.fixedBrightness.brightness, jsonBrightnessSettings[F("fixedBrightness")][F("brightness")]);
-    copyInt(conf.ldrBrightness.brightness.min, jsonBrightnessSettings[F("ldrBrightness")][F("brightness")][F("min")]);
-    copyInt(conf.ldrBrightness.brightness.max, jsonBrightnessSettings[F("ldrBrightness")][F("brightness")][F("max")]);
-    copyInt(conf.ldrBrightness.ldrRange.dark, jsonBrightnessSettings[F("ldrBrightness")][F("ldrRange")][F("dark")]);
-    copyInt(conf.ldrBrightness.ldrRange.bright , jsonBrightnessSettings[F("ldrBrightness")][F("ldrRange")][F("bright")]);
-    copyInt(conf.timeBrightness.brightness.min, jsonBrightnessSettings[F("timeBrightness")][F("brightness")][F("min")]);
-    copyInt(conf.timeBrightness.brightness.max, jsonBrightnessSettings[F("timeBrightness")][F("brightness")][F("max")]); 
-    copyInt(conf.timeBrightness.timeSlot.startHour, jsonBrightnessSettings[F("timeBrightness")][F("timeSlot")][F("startHour")]);
-    copyInt(conf.timeBrightness.timeSlot.endHour, jsonBrightnessSettings[F("timeBrightness")][F("timeSlot")][F("endHour")]);
+    conf.fixedBrightness.brightness = (uint8_t)jsonBrightnessSettings[F("fixedBrightness")][F("brightness")].as<int>();
+    conf.ldrBrightness.brightness.min = (uint8_t)jsonBrightnessSettings[F("ldrBrightness")][F("brightness")][F("min")].as<int>();
+    conf.ldrBrightness.brightness.max = (uint8_t)jsonBrightnessSettings[F("ldrBrightness")][F("brightness")][F("max")].as<int>();
+    conf.ldrBrightness.ldrRange.dark = (uint8_t)jsonBrightnessSettings[F("ldrBrightness")][F("ldrRange")][F("dark")].as<int>();
+    conf.ldrBrightness.ldrRange.bright = (uint8_t)jsonBrightnessSettings[F("ldrBrightness")][F("ldrRange")][F("bright")].as<int>();
+    conf.timeBrightness.brightness.min = (uint8_t)jsonBrightnessSettings[F("timeBrightness")][F("brightness")][F("min")].as<int>();
+    conf.timeBrightness.brightness.max = (uint8_t)jsonBrightnessSettings[F("timeBrightness")][F("brightness")][F("max")].as<int>();
+    conf.timeBrightness.timeSlot.startHour = (uint8_t)jsonBrightnessSettings[F("timeBrightness")][F("timeSlot")][F("startHour")].as<int>();
+    conf.timeBrightness.timeSlot.endHour = (uint8_t)jsonBrightnessSettings[F("timeBrightness")][F("timeSlot")][F("endHour")].as<int>();
 
-   reportmem("brightness");
- 
+    reportmem("brightness");
 
     if (json[F("wifi")][F("static_ip")])
     {
-      copyString(conf.wifiConfig.static_ip, json[F("wifi")][F("static_ip")]);
+      copyString(json[F("wifi")][F("static_ip")], conf.wifiConfig.static_ip);
     }
     if (json[F("wifi")][F("static_gw")])
     {
-      copyString(conf.wifiConfig.static_gw, json[F("wifi")][F("static_gw")]);
+      copyString(json[F("wifi")][F("static_gw")], conf.wifiConfig.static_gw);
     }
     if (json[F("wifi")][F("static_sn")])
     {
-      copyString(conf.wifiConfig.static_sn, json[F("wifi")][F("static_sn")]);
+      copyString(json[F("wifi")][F("static_sn")], conf.wifiConfig.static_sn);
     }
     if (json[F("wifi")][F("static_dns1")])
     {
-      copyString(conf.wifiConfig.static_dns1, json[F("wifi")][F("static_dns1")]);
+      copyString(json[F("wifi")][F("static_dns1")], conf.wifiConfig.static_dns1);
     }
     if (json[F("wifi")][F("static_dns2")])
     {
-      copyString(conf.wifiConfig.static_dns2, json[F("wifi")][F("static_dns2")]);
-    } 
+      copyString(json[F("wifi")][F("static_dns2")], conf.wifiConfig.static_dns2);
+    }
   }
   else
   {
@@ -383,7 +395,6 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
 
   return true;
 }
-
 
 void printConfig(Configuration &conf)
 {
@@ -409,7 +420,7 @@ void loadConfiguration(Configuration *conf)
     if (!deserializeError)
     {
       // serializeJson(json,Serial);
-     // serializeJsonPretty(json, Serial);
+      // serializeJsonPretty(json, Serial);
       validJSON = true;
       JSON2config(json, *conf);
     }
@@ -418,13 +429,11 @@ void loadConfiguration(Configuration *conf)
       debug_println(deserializeError.c_str());
       debug_println(F("failed to load json config"));
     }
-
   }
   else
   {
     debug_println(F("Cannot open config file"));
   }
-
 
   if (!validJSON)
   {
@@ -445,7 +454,7 @@ void configurationSetup()
     Serial.println("ERROR malloc configurationSetup");
   }
 
-    reportmem("test");
+  reportmem("test");
   loadConfiguration(config);
 }
 
