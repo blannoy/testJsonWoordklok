@@ -1,15 +1,16 @@
 #pragma once
 
+#define MAXLEDS 144
 #include <headers.h>
 #define colorSaturation 64
 #ifdef ESP32
 NeoPixelBus<NeoGrbFeature, DotStarEsp32DmaSpiMethod> strip(NUM_LEDS);
 #else
-NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(NUM_LEDS);
+NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(MAXLEDS);
 #endif
-NeoBuffer<NeoBufferMethod<NeoGrbFeature>> klokImage(NUM_LEDS, 1, NULL);
-NeoBuffer<NeoBufferMethod<NeoGrbFeature>> targetKlokImage(NUM_LEDS, 1, NULL);
-NeoPixelAnimator animations(NUM_LEDS, NEO_CENTISECONDS);
+NeoBuffer<NeoBufferMethod<NeoGrbFeature>> klokImage(MAXLEDS, 1, NULL);
+NeoBuffer<NeoBufferMethod<NeoGrbFeature>> targetKlokImage(MAXLEDS, 1, NULL);
+NeoPixelAnimator animations(MAXLEDS, NEO_CENTISECONDS);
 
 
 RgbColor red(colorSaturation, 0, 0);
@@ -88,7 +89,7 @@ void clearLEDS()
 void FadeAll(uint8_t darkenBy)
 {
   RgbColor color;
-  for (int indexPixel = OFFSET; indexPixel < strip.PixelCount(); indexPixel++)
+  for (uint8_t indexPixel = config->clockfaceLayout.extraLEDs; indexPixel < strip.PixelCount(); indexPixel++)
   {
     color = strip.GetPixelColor(indexPixel);
     color.Darken(darkenBy);
@@ -125,7 +126,7 @@ byte calcBrightness()
   return brightness;
 }
 
-void setColor(int ledNr, NeoBufferMethod<NeoGrbFeature>::ColorObject color)
+void setColor(uint8_t ledNr, NeoBufferMethod<NeoGrbFeature>::ColorObject color)
 {
   // check if color changed
   // RgbColor currentColor = getColor(klokImage, ledNr);
@@ -133,7 +134,7 @@ void setColor(int ledNr, NeoBufferMethod<NeoGrbFeature>::ColorObject color)
   klokImage.SetPixelColor(ledNr, 0, color);
 }
 
-RgbColor getColor(NeoBuffer<NeoBufferMethod<NeoGrbFeature>> &image, int ledNr)
+RgbColor getColor(NeoBuffer<NeoBufferMethod<NeoGrbFeature>> &image, uint8_t ledNr)
 {
   return image.GetPixelColor(ledNr, 0);
 }
@@ -148,7 +149,7 @@ void showFace(bool doTransit)
   shader.setBrightness(150);
  
     klokImage.Render<BrightnessShader<NeoGrbFeature>>(strip, shader);
-  //   for (int i=0;i<NUM_LEDS;i++){
+  //   for (uint8_t i=0;i<NUM_LEDS;i++){
   //     RgbColor color = strip.GetPixelColor(i);
   //     color=color.Dim(random(120));
   //     strip.SetPixelColor(i, color); 
@@ -156,7 +157,7 @@ void showFace(bool doTransit)
     strip.Show();
 }
 
-RgbColor HueToRgbColor(int colorValue)
+RgbColor HueToRgbColor(uint8_t colorValue)
 {
   if (colorValue == -1)
   {

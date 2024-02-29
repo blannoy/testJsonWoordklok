@@ -95,13 +95,13 @@ void hexToColorDef(const char *hex,colorDef* rgb)
   rgb->b = (uint8_t) (number & 0xFF);
   }
 
-void copyColorToJson(colorDef& color,JsonObject& jsonColor, const char* key){
+void copyColorToJson(const colorDef& color,JsonObject& jsonColor, const char* key){
    char hexColor[8];
    sprintf(hexColor,"#%02X%02X%02X",color.r,color.g,color.b);
    jsonColor[key]=hexColor;
 }
 
-void copyColorToJson(colorDef& color,JsonArray& jsonColor){
+void copyColorToJson(const colorDef& color,JsonArray& jsonColor){
    char hexColor[8];
    sprintf(hexColor,"#%02X%02X%02X",color.r,color.g,color.b);
    jsonColor.add(hexColor);

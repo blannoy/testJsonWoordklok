@@ -1,38 +1,38 @@
 #pragma once
 #include <headers.h>
 
-int splashScreen[] = {97, 70, 75, 80, 68, 65, 48, 53, 42, 37, 25, 19, 15, 11};
-bool alwaysOnMethod(int hour, int minute)
+uint8_t splashScreen[] = {97, 70, 75, 80, 68, 65, 48, 53, 42, 37, 25, 19, 15, 11};
+bool alwaysOnMethod(uint8_t hour, uint8_t minute)
 {
   return true;
 }
 
-bool isJustMethod(int hour, int minute)
+bool isJustMethod(uint8_t hour, uint8_t minute)
 {
   return (minute == 0);
 }
 
-bool firstMinuteMethod(int hour, int minute)
+bool firstMinuteMethod(uint8_t hour, uint8_t minute)
 {
   return (minute % 5) > 0;
 }
 
-bool secondMinuteMethod(int hour, int minute)
+bool secondMinuteMethod(uint8_t hour, uint8_t minute)
 {
   return (minute % 5) > 1;
 }
 
-bool thirdMinuteMethod(int hour, int minute)
+bool thirdMinuteMethod(uint8_t hour, uint8_t minute)
 {
   return (minute % 5) > 2;
 }
 
-bool fourthMinuteMethod(int hour, int minute)
+bool fourthMinuteMethod(uint8_t hour, uint8_t minute)
 {
   return (minute % 5) > 3;
 }
 
-bool fiveMinuteMethod(int hour, int minute)
+bool fiveMinuteMethod(uint8_t hour, uint8_t minute)
 {
   switch (minute)
   {
@@ -62,7 +62,7 @@ bool fiveMinuteMethod(int hour, int minute)
   return false;
 }
 
-bool tenMinuteMethod(int hour, int minute)
+bool tenMinuteMethod(uint8_t hour, uint8_t minute)
 {
   switch (minute)
   {
@@ -82,7 +82,7 @@ bool tenMinuteMethod(int hour, int minute)
   return false;
 }
 
-bool quarterMethod(int hour, int minute)
+bool quarterMethod(uint8_t hour, uint8_t minute)
 {
   switch (minute)
   {
@@ -102,7 +102,7 @@ bool quarterMethod(int hour, int minute)
   return false;
 }
 
-bool twentyMethod(int hour, int minute)
+bool twentyMethod(uint8_t hour, uint8_t minute)
 {
   switch (minute)
   {
@@ -121,7 +121,7 @@ bool twentyMethod(int hour, int minute)
 
   return false;
 }
-bool pastMethod(int hour, int minute)
+bool pastMethod(uint8_t hour, uint8_t minute)
 {
   if ((minute >= 5) && (minute < 25))
     return true;
@@ -130,7 +130,7 @@ bool pastMethod(int hour, int minute)
   return false;
 }
 
-bool beforeMethod(int hour, int minute)
+bool beforeMethod(uint8_t hour, uint8_t minute)
 {
   if ((minute >= 25) && (minute < 30))
     return true;
@@ -139,19 +139,19 @@ bool beforeMethod(int hour, int minute)
   return false;
 }
 
-bool wholeHourMethod(int hour, int minute)
+bool wholeHourMethod(uint8_t hour, uint8_t minute)
 {
   return minute < 5;
 }
 
-bool halfHourMethod(int hour, int minute)
+bool halfHourMethod(uint8_t hour, uint8_t minute)
 {
   return ((minute >= 25) && (minute < 40));
 }
 
-bool isHourActive(int testHour, int hour, int minute)
+bool isHourActive(uint8_t testHour, uint8_t hour, uint8_t minute)
 {
-  int previousHour = testHour - 1;
+  uint8_t previousHour = testHour - 1;
   if (previousHour < 0)
     previousHour = 11;
 
@@ -165,68 +165,73 @@ bool isHourActive(int testHour, int hour, int minute)
   return false;
 }
 
-bool isOneActiveMethod(int hour, int minute)
+bool isOneActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(1, hour, minute);
 }
-bool isTwoActiveMethod(int hour, int minute)
+bool isTwoActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(2, hour, minute);
 }
-bool isThreeActiveMethod(int hour, int minute)
+bool isThreeActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(3, hour, minute);
 }
-bool isFourActiveMethod(int hour, int minute)
+bool isFourActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(4, hour, minute);
 }
-bool isFiveActiveMethod(int hour, int minute)
+bool isFiveActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(5, hour, minute);
 }
-bool isSixActiveMethod(int hour, int minute)
+bool isSixActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(6, hour, minute);
 }
-bool isSevenActiveMethod(int hour, int minute)
+bool isSevenActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(7, hour, minute);
 }
-bool isEightActiveMethod(int hour, int minute)
+bool isEightActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(8, hour, minute);
 }
-bool isNineActiveMethod(int hour, int minute)
+bool isNineActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(9, hour, minute);
 }
-bool isTenActiveMethod(int hour, int minute)
+bool isTenActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(10, hour, minute);
 }
-bool isElevenActiveMethod(int hour, int minute)
+bool isElevenActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(11, hour, minute);
 }
-bool isTwelveActiveMethod(int hour, int minute)
+bool isTwelveActiveMethod(uint8_t hour, uint8_t minute)
 {
   return isHourActive(0, hour, minute);
 }
 
-isActiveMethod methodStringToMethod(String method)
+
+
+isActiveMethod methodStringToMethod(const char* method)
 {
-  for (uint8_t iMethod = 0; iMethod < sizeof(isActiveMethodStrings) / sizeof(isActiveMethodStrings[0]); iMethod++)
+
+  uint8_t nrMethodStrings=sizeof(isActiveMethodStrings) / sizeof(isActiveMethodStrings[0]);
+   for (uint8_t iMethod = 0; iMethod < nrMethodStrings; iMethod++)
   {
-    if (method == isActiveMethodStrings[iMethod])
-    {
-      return (isActiveMethod)iMethod;
-    };
-  }
+    if (strcmp(method,isActiveMethodStrings[iMethod])==0)
+     {
+       return (isActiveMethod)iMethod;
+
+     };
+  } 
       return isActiveMethod::alwaysOn;
 }
 
-bool isActiveCheck(isActiveMethod isActive, int hour, int minute)
+bool isActiveCheck(isActiveMethod isActive, uint8_t hour, uint8_t minute)
 {
   switch (isActive)
   {

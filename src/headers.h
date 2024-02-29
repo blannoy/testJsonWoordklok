@@ -13,20 +13,8 @@
 
 #define HOSTNAME_MAX 256
 #define CONFIGSIZE 8192
-#define NUM_ROWS 10
-#define NUM_COLS 11
-#define OFFSET 4 // 4 minute dots
-#define MATRIX_LEDS NUM_ROWS *NUM_COLS
-#define NUM_LEDS NUM_ROWS *NUM_COLS + OFFSET
-#define NUMWORDS 27
 #define NUMKEYS 5
 String configKeys[NUMKEYS] = {"system", "clockface", "colors", "brightness", "checksum"};
-
-uint8_t wordGridHorizontal;
-uint8_t wordGridVertical;
-uint8_t extraLEDs;
-uint16_t totalLeds = 0;
-uint8_t totalWords = 0;
 
 typedef enum
 {
@@ -62,15 +50,24 @@ const char *isActiveMethodStrings[] = {"alwaysOn", "isJust", "fiveMinute", "tenM
 struct ClockfaceWord
 {
   uint8_t *leds;
-  int colorCodeInTable;
-  const char* label;
+  uint8_t colorCodeInTable;
+  const char *label;
   isActiveMethod isActive;
+};
+
+struct ClockfaceLayout
+{
+  uint8_t wordGridHorizontal;
+  uint8_t wordGridVertical;
+  uint8_t extraLEDs;
+  uint16_t totalLeds;
+  uint8_t totalWords;
 };
 
 #define BOOTANIMTIME 5000
 String version = "0.5";
 
-extern int PixelCount;
+extern uint8_t PixelCount;
 
 enum LedMode
 {
@@ -149,7 +146,8 @@ struct LDRBrightnessConfig
   BrightnessDef brightness;
 };
 
-struct TimeSlotDef{
+struct TimeSlotDef
+{
   uint8_t startHour;
   uint8_t endHour;
 };
@@ -164,6 +162,7 @@ struct Configuration
 {
   char ntp_server[64];
   char hostname[64];
+  ClockfaceLayout clockfaceLayout;
   ClockfaceWord *clockface;
   LedMode ledMode;
   WifiConfig wifiConfig;
@@ -183,8 +182,9 @@ void ledShowClockface();
 byte calcBrightness();
 
 void setColor(int, NeoBufferMethod<NeoGrbFeature>::ColorObject);
-RgbColor getColor(NeoBuffer<NeoBufferMethod<NeoGrbFeature>> &, int);
+RgbColor getColor(NeoBuffer<NeoBufferMethod<NeoGrbFeature>> &, uint8_t);
 void clearLEDTo(NeoBuffer<NeoBufferMethod<NeoGrbFeature>> &, NeoBufferMethod<NeoGrbFeature>::ColorObject);
 void showFace(bool);
-RgbColor HueToRgbColor(int);
+RgbColor HueToRgbColor(uint8_t);
 isActiveMethod methodStringToMethod(String);
+isActiveMethod methodStringToMethod(const char *);

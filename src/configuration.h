@@ -70,7 +70,7 @@ const char *createString(JsonVariantConst variant)
 
 // void copyInt(JsonVariantConst variant,uint8_t &configVal)
 // {
-//   const int value = variant.as<const int>();
+//   const uint8_t value = variant.as<const int>();
 //   memmove(&configVal, &value, sizeof(uint8_t));
 // }
 
@@ -89,13 +89,13 @@ DynamicJsonDocument config2JSON(Configuration &conf)
   system[F("hostname")] = conf.hostname;
 
   JsonObject jsonClockface = json[F("clockface")].to<JsonObject>();
-  jsonClockface[F("wordGridHorizontal")] = NUM_COLS;
-  jsonClockface[F("wordGridVertical")] = NUM_ROWS;
-  jsonClockface[F("extraLEDs")] = OFFSET;
+  jsonClockface[F("wordGridHorizontal")] = conf.clockfaceLayout.wordGridHorizontal;
+  jsonClockface[F("wordGridVertical")] = conf.clockfaceLayout.wordGridVertical;
+  jsonClockface[F("extraLEDs")] = conf.clockfaceLayout.extraLEDs;
 
   JsonArray layout = jsonClockface[F("layout")].to<JsonArray>();
 
-  for (uint8_t i = 0; i < NUMWORDS; i++)
+  for (uint8_t i = 0; i < conf.clockfaceLayout.totalWords; i++)
   {
     JsonObject wordConfig = layout.createNestedObject();
     wordConfig[F("word")] = conf.clockface[i].label;
@@ -104,15 +104,17 @@ DynamicJsonDocument config2JSON(Configuration &conf)
     {
       ledLayout.add(conf.clockface[i].leds[j]);
     }
+    wordConfig[F("function")]=isActiveMethodStrings[conf.clockface[i].isActive];
   }
 
   JsonObject background = layout.createNestedObject();
-  background[F("background")]=conf.clockface[NUMWORDS].label;
+  background[F("background")]=conf.clockface[conf.clockfaceLayout.totalWords].label;
   JsonArray ledLayout = background[F("leds")].to<JsonArray>();
   for (uint8_t j = 0; j < background[F("background")].as<String>().length(); j++)
   {
-    ledLayout.add(conf.clockface[NUMWORDS].leds[j]);
+    ledLayout.add(conf.clockface[conf.clockfaceLayout.totalWords].leds[j]);
   } 
+  background[F("function")]=isActiveMethodStrings[conf.clockface[conf.clockfaceLayout.totalWords].isActive];
   JsonObject colors = json[F("colors")].to<JsonObject>();
 
   switch (conf.ledMode)
@@ -145,7 +147,7 @@ DynamicJsonDocument config2JSON(Configuration &conf)
 
   JsonObject colors_ledConfig_hourlyColor = colors_ledConfig[F("hourlyColor")].to<JsonObject>();
   JsonArray colors_ledConfig_hourlyColor_color = colors_ledConfig_hourlyColor[F("color")].to<JsonArray>();
-  for (int i = 0; i < 24; i++)
+  for (uint8_t i = 0; i < 24; i++)
   {
     copyColorToJson(conf.hourlyColor.color[i], colors_ledConfig_hourlyColor_color);
   }
@@ -153,7 +155,7 @@ DynamicJsonDocument config2JSON(Configuration &conf)
 
   JsonObject colors_ledConfig_wordColor = colors_ledConfig[F("wordColor")].to<JsonObject>();
   JsonArray colors_ledConfig_wordColor_color = colors_ledConfig_wordColor[F("color")].to<JsonArray>();
-  for (int i = 0; i < NUMWORDS; i++)
+  for (uint8_t i = 0; i < conf.clockfaceLayout.totalWords; i++)
   {
     copyColorToJson(conf.wordColor.color[i], colors_ledConfig_wordColor_color);
   }
@@ -218,7 +220,7 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
 
   bool validJSON = true;
   // debug_println(json[F("system")][F("ntp_server")].as<String>());
-  for (int i = 0; i < NUMKEYS; i++)
+  for (uint8_t i = 0; i < NUMKEYS; i++)
   {
     if (!doc.containsKey(configKeys[i]))
     {
@@ -230,12 +232,12 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
   if (validJSON)
   {
 
-    wordGridHorizontal = json[F("clockface")][F("wordGridHorizontal")].as<unsigned int>();
-    wordGridVertical = json[F("clockface")][F("wordGridVertical")].as<unsigned int>();
-    extraLEDs = json[F("clockface")][F("extraLEDs")].as<unsigned int>();
-    totalLeds = wordGridHorizontal * wordGridVertical + extraLEDs;
+    conf.clockfaceLayout.wordGridHorizontal = json[F("clockface")][F("wordGridHorizontal")].as<unsigned int>();
+    conf.clockfaceLayout.wordGridVertical = json[F("clockface")][F("wordGridVertical")].as<unsigned int>();
+    conf.clockfaceLayout.extraLEDs = json[F("clockface")][F("extraLEDs")].as<unsigned int>();
+    conf.clockfaceLayout.totalLeds = conf.clockfaceLayout.wordGridHorizontal * conf.clockfaceLayout.wordGridVertical + conf.clockfaceLayout.extraLEDs;
     JsonArray layout = json[F("clockface")][F("layout")];
-    totalWords = layout.size() - 1;
+    conf.clockfaceLayout.totalWords = layout.size() - 1;
 
     // debug_printf("Total words: %d\n", totalWords);
     // debug_printf("Total leds: %d\n", totalLeds);
@@ -255,26 +257,26 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
 
     /// Load clockface
     //  memory needed for clockface:
-    //  totalleds*sizeof(int)+(numwords+1)*sizeof(int) + (numleds * sizeof(char) + (numwords+1)*nullterminator) + 20*sizeof(char)
-    conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(int) + (totalWords + 1) * sizeof(int) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
-    // conf.clockface = (ClockfaceWord *)malloc((totalWords + 1)*sizeof(ClockfaceWord));
+    //  totalleds*sizeof(uint8_t )+(conf.clockfaceLayout.totalWords+1)*sizeof(uint8_t ) + (numleds * sizeof(char) + (conf.clockfaceLayout.totalWords+1)*nullterminator) + 20*sizeof(char)
+    //conf.clockface = (ClockfaceWord *)malloc(totalLeds * sizeof(uint8_t ) + (totalWords + 1) * sizeof(uint8_t ) + (totalLeds * sizeof(char) + (totalWords + 1) * sizeof(char)) + 20 * sizeof(char));
+    conf.clockface = (ClockfaceWord *)malloc((conf.clockfaceLayout.totalWords + 1)*sizeof(ClockfaceWord));
     if (!conf.clockface)
     {
       Serial.println("ERROR malloc conf.clockface");
     }
     uint8_t backgroundKey = -1;
-    for (int iWord = 0; iWord < totalWords + 1; iWord++)
+    for (uint8_t iWord = 0; iWord < conf.clockfaceLayout.totalWords + 1; iWord++)
     {
       JsonArrayConst jsonLeds = layout[iWord]["leds"].as<JsonArray>();
       if (layout[iWord].containsKey(F("word")))
       {
         conf.clockface[iWord].label = createString(layout[iWord][F("word")]);
-        conf.clockface[iWord].leds = (uint8_t *)malloc(jsonLeds.size() * sizeof(int));
+        conf.clockface[iWord].leds = (uint8_t *)malloc(jsonLeds.size() * sizeof(uint8_t ));
         for (uint8_t i = 0; i < jsonLeds.size(); i++)
         {
           conf.clockface[iWord].leds[i] = jsonLeds[i].as<int>();
         }
-        conf.clockface[iWord].isActive = methodStringToMethod(layout[iWord][F("function")].as<String>());
+        conf.clockface[iWord].isActive = methodStringToMethod(createString(layout[iWord][F("function")]));
         conf.clockface[iWord].colorCodeInTable = iWord;
       }
       else if (layout[iWord].containsKey(F("background")))
@@ -286,12 +288,12 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
     {
       JsonArrayConst jsonLeds = layout[backgroundKey]["leds"].as<JsonArray>();
       conf.clockface[backgroundKey].label = createString(layout[backgroundKey][F("background")]);
-      conf.clockface[backgroundKey].leds = (uint8_t *)malloc(jsonLeds.size() * sizeof(int));
+      conf.clockface[backgroundKey].leds = (uint8_t *)malloc(jsonLeds.size() * sizeof(uint8_t ));
       for (uint8_t i = 0; i < jsonLeds.size(); i++)
       {
         conf.clockface[backgroundKey].leds[i] = jsonLeds[i].as<int>();
       }
-      conf.clockface[backgroundKey].isActive = methodStringToMethod(layout[backgroundKey][F("function")].as<String>());
+      conf.clockface[backgroundKey].isActive = methodStringToMethod(createString(layout[backgroundKey][F("function")]));
       conf.clockface[backgroundKey].colorCodeInTable = backgroundKey;
     }
 
@@ -318,19 +320,19 @@ bool JSON2config(const JsonDocument &doc, Configuration &conf)
     copyColor(jsonColors[F("ledConfig")][F("singleColor")][F("color")], conf.singleColor.color);
     copyColor(jsonColors[F("ledConfig")][F("singleColor")][F("backgroundColor")], conf.singleColor.backgroundColor);
     JsonObjectConst hourlyColor = jsonColors[F("ledConfig")][F("hourlyColor")];
-    for (int i = 0; i < 24; i++)
+    for (uint8_t i = 0; i < 24; i++)
     {
       copyColor(hourlyColor[F("color")][i], conf.hourlyColor.color[i]);
     }
     copyColor(hourlyColor[F("backgroundColor")], conf.hourlyColor.backgroundColor);
 
     JsonObjectConst wordColor = jsonColors[F("ledConfig")][F("wordColor")];
-    conf.wordColor.color = (colorDef *)malloc(totalWords * sizeof(colorDef));
+    conf.wordColor.color = (colorDef *)malloc(conf.clockfaceLayout.totalWords * sizeof(colorDef));
     if (!conf.wordColor.color)
     {
       Serial.println("ERROR malloc conf.wordcolor.color");
     }
-    for (int i = 0; i < totalWords; i++)
+    for (uint8_t i = 0; i < conf.clockfaceLayout.totalWords; i++)
     {
       copyColor(wordColor[F("color")][i], conf.wordColor.color[i]);
     }
